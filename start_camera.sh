@@ -8,7 +8,10 @@
 VIDEO_DEVICE=${VIDEO_DEVICE:-/dev/video1}
 RTSP_PORT=${RTSP_PORT:-8554}
 ONVIF_PORT=${ONVIF_PORT:-8000}
-LOCAL_IP=${LOCAL_IP:-}
+# Get the first non-loopback IPv4 address if LOCAL_IP is not set
+if [ -z "$LOCAL_IP" ]; then
+    LOCAL_IP=$(ip -4 addr show scope global | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1)
+fi
 VIDEO_WIDTH=${VIDEO_WIDTH:-640}
 VIDEO_HEIGHT=${VIDEO_HEIGHT:-480}
 VIDEO_FRAMERATE=${VIDEO_FRAMERATE:-25}
@@ -64,10 +67,10 @@ fi
 LOG_FUNC "Starting RTSP server..."
 if [ "$IS_SERVICE" = true ]; then
     # Service mode: redirect output to stderr for systemd logging
-    VIDEO_DEVICE="$VIDEO_DEVICE" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH="$VIDEO_WIDTH" VIDEO_HEIGHT="$VIDEO_HEIGHT" VIDEO_FRAMERATE="$VIDEO_FRAMERATE" python3 rtsp_server_gst.py >&2 &
+    VIDEO_DEVICE="$VIDEO_DEVICE" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH="$VIDEO_WIDTH" VIDEO_HEIGHT="$VIDEO_HEIGHT" VIDEO_FRAMERATE="$VIDEO_FRAMERATE" python rtsp_server_gst.py >&2 &
 else
     # Interactive mode: normal output
-    VIDEO_DEVICE="$VIDEO_DEVICE" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH="$VIDEO_WIDTH" VIDEO_HEIGHT="$VIDEO_HEIGHT" VIDEO_FRAMERATE="$VIDEO_FRAMERATE" python3 rtsp_server_gst.py &
+    VIDEO_DEVICE="$VIDEO_DEVICE" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH="$VIDEO_WIDTH" VIDEO_HEIGHT="$VIDEO_HEIGHT" VIDEO_FRAMERATE="$VIDEO_FRAMERATE" python rtsp_server_gst.py &
 fi
 RTSP_PID=$!
 LOG_FUNC "RTSP server started (PID: $RTSP_PID)"

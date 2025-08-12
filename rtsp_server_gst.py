@@ -71,6 +71,7 @@ class RTSPServer:
             pipeline = (
                 f'v4l2src device={self.video_device} '
                 '! videoconvertscale '
+                '! videorate '
                 f'! video/x-raw,width={VIDEO_WIDTH},height={VIDEO_HEIGHT},framerate={VIDEO_FRAMERATE}/1 '
                 '! openh264enc bitrate=2000000 '
                 '! rtph264pay name=pay0 pt=96'

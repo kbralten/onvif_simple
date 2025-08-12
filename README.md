@@ -152,6 +152,26 @@ logging.basicConfig(level=logging.DEBUG)
 exec(open('onvif_server.py').read())
 "
 ```
+## Service management commands
+```# Install the service
+sudo ./install-service.sh install
+
+# Check status
+./install-service.sh status
+
+# Start/stop/restart
+sudo ./install-service.sh start
+sudo ./install-service.sh stop
+sudo ./install-service.sh restart
+
+# View configuration
+./install-service.sh config
+
+# View live logs
+sudo ./install-service.sh logs
+
+# Remove the service
+sudo ./install-service.sh remove```
 
 ## How It Works
 

@@ -8,6 +8,8 @@
 VIDEO_DEVICE=${VIDEO_DEVICE:-/dev/video1}
 RTSP_PORT=${RTSP_PORT:-8554}
 ONVIF_PORT=${ONVIF_PORT:-8000}
+# CAMERA_NAME can be set via env or argument
+CAMERA_NAME=${CAMERA_NAME:-}
 # Get the first non-loopback IPv4 address if LOCAL_IP is not set
 if [ -z "$LOCAL_IP" ]; then
     LOCAL_IP=$(ip -4 addr show scope global | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1)
@@ -134,10 +136,10 @@ sleep 3
 LOG_FUNC "Starting ONVIF server..."
 if [ "$IS_SERVICE" = true ]; then
     # Service mode: redirect output to stderr for systemd logging
-    ONVIF_PORT="$ONVIF_PORT" LOCAL_IP="$LOCAL_IP" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH="$VIDEO_WIDTH" VIDEO_HEIGHT="$VIDEO_HEIGHT" VIDEO_FRAMERATE="$VIDEO_FRAMERATE" python3 onvif_server.py >&2 &
+    ONVIF_PORT="$ONVIF_PORT" LOCAL_IP="$LOCAL_IP" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH="$VIDEO_WIDTH" VIDEO_HEIGHT="$VIDEO_HEIGHT" VIDEO_FRAMERATE="$VIDEO_FRAMERATE" CAMERA_NAME="$CAMERA_NAME" python3 onvif_server.py >&2 &
 else
     # Interactive mode: normal output
-    ONVIF_PORT="$ONVIF_PORT" LOCAL_IP="$LOCAL_IP" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH="$VIDEO_WIDTH" VIDEO_HEIGHT="$VIDEO_HEIGHT" VIDEO_FRAMERATE="$VIDEO_FRAMERATE" python3 onvif_server.py &
+    ONVIF_PORT="$ONVIF_PORT" LOCAL_IP="$LOCAL_IP" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH="$VIDEO_WIDTH" VIDEO_HEIGHT="$VIDEO_HEIGHT" VIDEO_FRAMERATE="$VIDEO_FRAMERATE" CAMERA_NAME="$CAMERA_NAME" python3 onvif_server.py &
 fi
 ONVIF_PID=$!
 LOG_FUNC "ONVIF server started (PID: $ONVIF_PID)"

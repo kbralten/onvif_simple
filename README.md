@@ -22,7 +22,7 @@ Turn any USB camera into an ONVIF-compatible IP camera. This project creates an 
       sudo apt update
       #install dependencies and python requirements
       sudo apt install python3 python3-pip python3-venv gstreamer1.0-* gir1.2-gstreamer-1.0 gir1.2-gst-rtsp-server-1.0 netcat-traditional
-      sudo apt install python3-gi python3-gi-cairo python3-aiohttp
+      sudo apt install python3-gi python3-gi-cairo python3-aiohttp python3-netifaces
       ```
 
 2. **Install ustreamer if desired**
@@ -63,6 +63,7 @@ LOCAL_IP=192.168.1.100 \
 | `VIDEO_FRAMERATE` | `25` | Video stream frame rate |
 | `USTREAMER_HOST` | `127.0.0.1` | ustreamer host (when using ustreamer source) |
 | `USTREAMER_PORT` | `8080` | ustreamer port (when using ustreamer source) |
+| `CAMERA_NAME` | _(system hostname)_ | Hostname reported by ONVIF GetHostname response. If set, overrides the system hostname. |
 
 ### Video Source Options
 
@@ -83,6 +84,12 @@ VIDEO_SOURCE=ustreamer ./start_camera.sh
 The script will automatically start ustreamer if it's not already running.
 
 ### Example Configurations
+
+**Custom Camera Name:**
+```bash
+CAMERA_NAME="MyCustomCamera" ./start_camera.sh
+```
+This will cause the ONVIF GetHostname response to return `MyCustomCamera` as the device hostname.
 **High Resolution Setup:**
 ```bash
 VIDEO_WIDTH=1920 VIDEO_HEIGHT=1080 VIDEO_FRAMERATE=30 ./start_camera.sh

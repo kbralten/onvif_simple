@@ -3,35 +3,41 @@
 Turn any USB camera into an ONVIF-compatible IP camera. This project creates an ONVIF device server with RTSP streaming using GStreamer for your USB video device.
 
 ## Quick Start
-
-1. **Install dependencies:** (Select one install option)
-   - With pip
+### Clone the repository:
       ```bash
-      #update
-      sudo apt update
-      #install dependencies
-      sudo apt install python3 python3-pip python3-venv gstreamer1.0-* gir1.2-gstreamer-1.0 gir1.2-gst-rtsp-server-1.0 netcat-traditional
-      #setup a python virtual environment
-      python3 -m venv .venv
-      source .venv/bin/activate
-      pip install -r requirements.txt
-      ```
-   - or with apt packages
-      ```bash
-      #update
-      sudo apt update
-      #install dependencies and python requirements
-      sudo apt install python3 python3-pip python3-venv gstreamer1.0-* gir1.2-gstreamer-1.0 gir1.2-gst-rtsp-server-1.0 netcat-traditional
-      sudo apt install python3-gi python3-gi-cairo python3-aiohttp python3-netifaces
+      #install git (`sudo apt-get update && sudo apt-get install git`)
+      git clone https://github.com/kbralten/onvif_simple.git
       ```
 
-2. **Install ustreamer if desired**
+### Install dependencies
+Install system dependencies
+   ```bash
+   #update
+   sudo apt update
+   #install dependencies
+   sudo apt install python3 python3-pip python3-venv gstreamer1.0-* gir1.2-gstreamer-1.0 gir1.2-gst-rtsp-server-1.0 netcat-traditional
+   ```
+
+Install Python dependencies either:
+- With `pip` and a python virtual environment
+   ```bash
+   #setup a python virtual environment
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+- or with `apt` packages
+   ```bash
+   #install python requirements
+   sudo apt install python3-gi python3-gi-cairo python3-aiohttp python3-netifaces
+   ```
+Install ustreamer if desired
    ```bash
    #install ustreamer
    sudo apt install ustreamer
    ```
 
-2. **Run the camera emulator:**
+### Run the camera emulator
    ```bash
    ./start_camera.sh
    ```

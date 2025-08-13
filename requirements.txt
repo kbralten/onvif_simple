@@ -1,2 +1,3 @@
-onvif-zeep
 aiohttp
+gi
+gi-cairo

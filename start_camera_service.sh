@@ -8,7 +8,9 @@
 VIDEO_DEVICE=${VIDEO_DEVICE:-/dev/video1}
 RTSP_PORT=${RTSP_PORT:-8554}
 ONVIF_PORT=${ONVIF_PORT:-8000}
-LOCAL_IP=${LOCAL_IP:-}
+if [ -z "$LOCAL_IP" ]; then
+    LOCAL_IP=$(ip -4 addr show scope global | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1)
+fi
 CAMERA_NAME=${CAMERA_NAME:-}
 VIDEO_WIDTH=${VIDEO_WIDTH:-640}
 VIDEO_HEIGHT=${VIDEO_HEIGHT:-480}

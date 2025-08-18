@@ -78,8 +78,26 @@ install_service() {
     
     # Install Python dependencies
     print_status "Installing Python dependencies..."
-    if [[ -f "$INSTALL_DIR/requirements.txt" ]]; then
-        pip3 install -r "$INSTALL_DIR/requirements.txt"
+
+    # Choose dependency installation method: pip or apt
+    DEP_METHOD="${DEP_METHOD:-pip}"  # Default to pip, can override with DEP_METHOD=apt
+
+    if [[ "$DEP_METHOD" == "apt" ]]; then
+        print_status "Installing Python dependencies via apt..."
+        if [[ -f "$INSTALL_DIR/requirements.txt" ]]; then
+            # Extract package names from requirements.txt and try to install python3-<package>
+            while IFS= read -r pkg; do
+                pkg_name=$(echo "$pkg" | cut -d'=' -f1 | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+                apt_pkg="python3-${pkg_name}"
+                print_status "Attempting to install $apt_pkg"
+                apt-get install -y "$apt_pkg" || print_warning "Could not install $apt_pkg via apt"
+            done < "$INSTALL_DIR/requirements.txt"
+        fi
+    else
+        print_status "Installing Python dependencies via pip..."
+        if [[ -f "$INSTALL_DIR/requirements.txt" ]]; then
+            pip3 install -r "$INSTALL_DIR/requirements.txt"
+        fi
     fi
     
     # Create configuration file
@@ -115,18 +133,17 @@ After=network.target
 Wants=network.target
 
 [Service]
-Type=forking
+Type=exec
 User=$SERVICE_USER
-Group=$SERVICE_USER
+Group=video
 WorkingDirectory=$INSTALL_DIR
 EnvironmentFile=$CONFIG_FILE
 ExecStart=$INSTALL_DIR/start_camera_service.sh
-ExecStop=/bin/kill -TERM \$MAINPID
-PIDFile=/run/${SERVICE_NAME}.pid
 Restart=always
 RestartSec=10
 KillMode=mixed
 TimeoutStopSec=30
+TimeoutStartSec=30
 
 # Security settings
 NoNewPrivileges=true
@@ -138,7 +155,7 @@ CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 
 # Device access
 DevicePolicy=closed
-DeviceAllow=/dev/video* rw
+DeviceAllow=char-video4linux
 
 [Install]
 WantedBy=multi-user.target

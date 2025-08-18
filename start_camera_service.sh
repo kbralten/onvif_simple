@@ -14,12 +14,11 @@ VIDEO_WIDTH=${VIDEO_WIDTH:-640}
 VIDEO_HEIGHT=${VIDEO_HEIGHT:-480}
 VIDEO_FRAMERATE=${VIDEO_FRAMERATE:-25}
 VIDEO_SOURCE=${VIDEO_SOURCE:-v4l2}  # 'v4l2' or 'ustreamer'
-USTREAMER_HOST=${USTREAMER_HOST:-localhost}
+USTREAMER_HOST=${USTREAMER_HOST:-127.0.0.1}
 USTREAMER_PORT=${USTREAMER_PORT:-8080}
 
 # Service configuration
 SERVICE_NAME="onvif-camera"
-PID_FILE="/run/${SERVICE_NAME}.pid"
 LOG_FILE="/var/log/${SERVICE_NAME}.log"
 
 # Function to log messages
@@ -42,7 +41,7 @@ cleanup() {
         kill $ONVIF_PID 2>/dev/null
         log_message "Stopped ONVIF server (PID: $ONVIF_PID)"
     fi
-    rm -f "$PID_FILE"
+    # No PID file to remove
     exit 0
 }
 
@@ -122,8 +121,8 @@ ONVIF_PORT="$ONVIF_PORT" LOCAL_IP="$LOCAL_IP" RTSP_PORT="$RTSP_PORT" VIDEO_WIDTH
 ONVIF_PID=$!
 log_message "ONVIF server started (PID: $ONVIF_PID)"
 
-# Write main PID file
-echo $$ > "$PID_FILE"
+
+    # No PID file needed for systemd Type=simple
 
 log_message "=== ONVIF Camera Emulator Started ==="
 log_message "Video Source: $VIDEO_SOURCE"

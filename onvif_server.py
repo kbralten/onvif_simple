@@ -39,7 +39,7 @@ VIDEO_FRAMERATE = int(os.environ.get('VIDEO_FRAMERATE', 30))
 MULTICAST_GROUP = '239.255.255.250'
 MULTICAST_PORT = 3702
 
-# Generate a unique device UUID for this session
+# Generate a unique device UUID for this configuration
 def get_mac_address():
     """Get the MAC address of the first non-loopback interface."""
     for iface in netifaces.interfaces():
@@ -50,10 +50,19 @@ def get_mac_address():
         if mac and mac[0].get('addr'):
             return mac[0]['addr']
     return None
-
 mac = get_mac_address()
+def compute_device_hash(mac, port, local_ip):
+    """Compute a short hash string from MAC address and port."""
+    if not mac:
+        mac = '00:00:00:00:00:00'
+    s = f"{mac}-{port}-{local_ip}"
+    h = hashlib.sha256(s.encode()).hexdigest()
+    # Use first 12 chars for brevity
+    return h[:12].upper()
+
+DEVICE_HASH = compute_device_hash(mac, ONVIF_SERVER_PORT,LOCAL_IP)
 if mac:
-    DEVICE_UUID = str(uuid.uuid5(uuid.NAMESPACE_DNS, mac))
+    DEVICE_UUID = str(uuid.uuid5(uuid.NAMESPACE_DNS, DEVICE_HASH))
 else:
     DEVICE_UUID = str(uuid.uuid4())
 DEVICE_URN = f"uuid:{DEVICE_UUID}"
@@ -292,7 +301,7 @@ class ONVIFDeviceService:
     """Implements a basic ONVIF Device service."""
     def get_device_information(self):
         """Returns mock information about the camera device."""
-        return f"""<tds:Manufacturer>VIRTUAL_ONVIF</tds:Manufacturer><tds:Model>ONVIF_SIMPLE</tds:Model><tds:FirmwareVersion>V0.1.1.0</tds:FirmwareVersion><tds:SerialNumber>A4EDS</tds:SerialNumber><tds:HardwareId>DEADBEEFUIAS</tds:HardwareId></tds:GetDeviceInformationResponse>"""
+        return f"""<tds:Manufacturer>VIRTUAL_ONVIF</tds:Manufacturer><tds:Model>ONVIF_SIMPLE</tds:Model><tds:FirmwareVersion>V0.1.1.0</tds:FirmwareVersion><tds:SerialNumber>{DEVICE_HASH}</tds:SerialNumber><tds:HardwareId>{DEVICE_HASH}</tds:HardwareId></tds:GetDeviceInformationResponse>"""
 
     def get_capabilities(self):
         """Returns device capabilities."""
@@ -435,8 +444,8 @@ async def handle_device_service(request):
 
     elif "GetDeviceInformation" in request_text:
         logger.info("Handling GetDeviceInformation request")
-        response_body = """<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://www.w3.org/2003/05/soap-envelope" xmlns:SOAP-ENC="http://www.w3.org/2003/05/soap-encoding" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:wsdd="http://schemas.xmlsoap.org/ws/2005/04/discovery" xmlns:chan="http://schemas.microsoft.com/ws/2005/02/duplex" xmlns:wsa5="http://www.w3.org/2005/08/addressing" xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xop="http://www.w3.org/2004/08/xop/include" xmlns:wsrfbf="http://docs.oasis-open.org/wsrf/bf-2" xmlns:tt="http://www.onvif.org/ver10/schema" xmlns:wstop="http://docs.oasis-open.org/wsn/t-1" xmlns:wsrfr="http://docs.oasis-open.org/wsrf/r-2" xmlns:tan="http://www.onvif.org/ver20/analytics/wsdl" xmlns:tdn="http://www.onvif.org/ver10/network/wsdl" xmlns:tds="http://www.onvif.org/ver10/device/wsdl" xmlns:tev="http://www.onvif.org/ver10/events/wsdl" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:c14n="http://www.w3.org/2001/10/xml-exc-c14n#" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" xmlns:wsc="http://schemas.xmlsoap.org/ws/2005/02/sc" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:timg="http://www.onvif.org/ver20/imaging/wsdl" xmlns:tmd="http://www.onvif.org/ver10/deviceIO/wsdl" xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl" xmlns:trt="http://www.onvif.org/ver10/media/wsdl" xmlns:ter="http://www.onvif.org/ver10/error" xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:trt2="http://www.onvif.org/ver20/media/wsdl" xmlns:tr2="http://www.onvif.org/ver20/media/wsdl" xmlns:tplt="http://www.onvif.org/ver10/plus/schema" xmlns:tpl="http://www.onvif.org/ver10/plus/wsdl" xmlns:ewsd="http://www.onvifext.com/onvif/ext/ver10/wsdl" xmlns:exsd="http://www.onvifext.com/onvif/ext/ver10/schema" xmlns:tnshik="http://www.hikvision.com/2011/event/topics"><SOAP-ENV:Body><tds:GetDeviceInformationResponse><tds:Manufacturer>VIRTUAL_ONVIF</tds:Manufacturer><tds:Model>ONVIF_SIMPLE</tds:Model><tds:FirmwareVersion>V0.1.1.0</tds:FirmwareVersion><tds:SerialNumber>A4EDS</tds:SerialNumber><tds:HardwareId>DEADBEEFUIAS</tds:HardwareId></tds:GetDeviceInformationResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>"""
+        response_body = f"""<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:SOAP-ENC=\"http://www.w3.org/2003/05/soap-encoding\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:wsa=\"http://schemas.xmlsoap.org/ws/2004/08/addressing\" xmlns:wsdd=\"http://schemas.xmlsoap.org/ws/2005/04/discovery\" xmlns:chan=\"http://schemas.microsoft.com/ws/2005/02/duplex\" xmlns:wsa5=\"http://www.w3.org/2005/08/addressing\" xmlns:xmime=\"http://www.w3.org/2005/05/xmlmime\" xmlns:xop=\"http://www.w3.org/2004/08/xop/include\" xmlns:wsrfbf=\"http://docs.oasis-open.org/wsrf/bf-2\" xmlns:tt=\"http://www.onvif.org/ver10/schema\" xmlns:wstop=\"http://docs.oasis-open.org/wsn/t-1\" xmlns:wsrfr=\"http://docs.oasis-open.org/wsrf/r-2\" xmlns:tan=\"http://www.onvif.org/ver20/analytics/wsdl\" xmlns:tdn=\"http://www.onvif.org/ver10/network/wsdl\" xmlns:tds=\"http://www.onvif.org/ver10/device/wsdl\" xmlns:tev=\"http://www.onvif.org/ver10/events/wsdl\" xmlns:wsnt=\"http://docs.oasis-open.org/wsn/b-2\" xmlns:c14n=\"http://www.w3.org/2001/10/xml-exc-c14n#\" xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\" xmlns:xenc=\"http://www.w3.org/2001/04/xmlenc#\" xmlns:wsc=\"http://schemas.xmlsoap.org/ws/2005/02/sc\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\" xmlns:timg=\"http://www.onvif.org/ver20/imaging/wsdl\" xmlns:tmd=\"http://www.onvif.org/ver10/deviceIO/wsdl\" xmlns:tptz=\"http://www.onvif.org/ver20/ptz/wsdl\" xmlns:trt=\"http://www.onvif.org/ver10/media/wsdl\" xmlns:ter=\"http://www.onvif.org/ver10/error\" xmlns:tns1=\"http://www.onvif.org/ver10/topics\" xmlns:trt2=\"http://www.onvif.org/ver20/media/wsdl\" xmlns:tr2=\"http://www.onvif.org/ver20/media/wsdl\" xmlns:tplt=\"http://www.onvif.org/ver10/plus/schema\" xmlns:tpl=\"http://www.onvif.org/ver10/plus/wsdl\" xmlns:ewsd=\"http://www.onvifext.com/onvif/ext/ver10/wsdl\" xmlns:exsd=\"http://www.onvifext.com/onvif/ext/ver10/schema\" xmlns:tnshik=\"http://www.hikvision.com/2011/event/topics\"><SOAP-ENV:Body><tds:GetDeviceInformationResponse><tds:Manufacturer>VIRTUAL_ONVIF</tds:Manufacturer><tds:Model>ONVIF_SIMPLE</tds:Model><tds:FirmwareVersion>V0.1.1.0</tds:FirmwareVersion><tds:SerialNumber>{DEVICE_HASH}</tds:SerialNumber><tds:HardwareId>{DEVICE_HASH}</tds:HardwareId></tds:GetDeviceInformationResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>"""
 
     elif "GetHostname" in request_text:
         logger.info("Handling GetHostname request")

@@ -93,22 +93,23 @@ class RTSPServer:
                 # Pipeline for direct V4L2 device access
                 pipeline = (
                     f'v4l2src device={self.video_device} '
-                    '! videoconvertscale '
                     '! videorate '
+                    '! videoconvertscale '
                     f'! video/x-raw,width={VIDEO_WIDTH},height={VIDEO_HEIGHT},framerate={VIDEO_FRAMERATE}/1 '
-                    '! openh264enc bitrate=2000000 '
+                    '! openh264enc complexity=low '
                     '! rtph264pay name=pay0 pt=96'
                 )
                 logger.info(f"Using V4L2 source: {self.video_device}")
             elif self.video_source == "ustreamer":
                 # Pipeline for ustreamer MJPEG source
                 pipeline = (
-                    f'souphttpsrc location=http://{self.ustreamer_host}:{self.ustreamer_port}/stream '
-                    '! multipartdemux '
+                    f'souphttpsrc location=http://{self.ustreamer_host}:{self.ustreamer_port}/stream is-live=true '
+                    '! multipartdemux ! queue leaky=downstream max-size-time=1000000 '
                     '! jpegdec '
+                    '! videorate '
                     '! videoconvertscale '
-                    f'! video/x-raw,width={VIDEO_WIDTH},height={VIDEO_HEIGHT} '
-                    '! openh264enc bitrate=2000000 '
+                    f'! video/x-raw,width={VIDEO_WIDTH},height={VIDEO_HEIGHT},framerate={VIDEO_FRAMERATE}/1 '
+                    '! openh264enc ! h264parse '
                     '! rtph264pay name=pay0 pt=96'
                 )
                 logger.info(f"Using ustreamer source: http://{self.ustreamer_host}:{self.ustreamer_port}/stream")
